@@ -17,11 +17,13 @@ BlockLevelModel::BlockLevelModel(int numBlocks)
 	 areas=new double[num_blocks];
 	normal_temperature_data=new double*[num_blocks];
 	power_data=new double[num_blocks];
+	Templast=new double [num_blocks];
 
 	ReadPowerDataFromFile("NormalPower.txt");
 
 	for (int i=0;i<num_blocks;i++)
 	{
+		Templast[i]=AbsoluteTemperatureBase+AmbientTemperature;
 		normal_temperature_data[i]=new double[num_blocks];
 		RI[i]=new double[num_blocks];
 	}
@@ -38,6 +40,7 @@ BlockLevelModel::~BlockLevelModel()
 	delete [] RI;
 	delete [] power_leakage;
 	delete [] areas;
+	delete [] Templast;
 
 }
 
@@ -109,6 +112,8 @@ void BlockLevelModel::ReadAreaDataFromFile(char* areaFileName)
 
 void BlockLevelModel::OutputComputeResultsToFile(char* tempFileName, char* powerFileName)
 {   
+	double  sum=0;
+	double s[7]={1,3,3,18,1,3,3};
 	ofstream ofile1(tempFileName,ios::out|ios::binary);
 	if (!ofile1)
 	{
@@ -120,7 +125,11 @@ void BlockLevelModel::OutputComputeResultsToFile(char* tempFileName, char* power
 		char szName[100] = {'\0'};
         sprintf(szName,"temp_%d",i+1);
 		ofile1<<szName<<"="<<'\t'<<Temp[i]<<'\t'<<'\t';
+		sum=sum+Temp[i]*s[i];
+
 	}
+	sum=sum/32;
+	ofile1<<"average"<<"="<<'\t'<<sum<<'\t'<<'\t';
 	ofile1.close();
 
 	ofstream ofile2(powerFileName,ios::out|ios::binary);
@@ -135,10 +144,12 @@ void BlockLevelModel::OutputComputeResultsToFile(char* tempFileName, char* power
 		char szName2[100] ;
 		sprintf(szName1,"Pleakage_%d",i+1);
 		sprintf(szName2,"Power_data_%d",i+1);
+		Templast[i]=AbsoluteTemperatureBase+AmbientTemperature;
 		ofile2<<szName1<<"="<<power_leakage[i]<<'\t'<<szName2<<"="<<power_data[i];
 		ofile2<<endl;
 	}
 	ofile2.close();
+	
 
 }
 void BlockLevelModel::ExtractBlockLevelParameterMatrix()
@@ -179,8 +190,8 @@ void BlockLevelModel::ComputeLeakagePower(double *T,double Valf)
 	power_leakage=new double[num_blocks];
 	for(int i=0;i<num_blocks;i++)
 	{
-        A[i] =1.1432*pow(10.00,-6)*areas[i]*Is;
-        B[i]=1.0126*pow(10.00,-8)*areas[i]*Is;
+        A[i] =1.1432*pow(10.00,-9)*areas[i]*Is;
+        B[i]=1.0126*pow(10.00,-11)*areas[i]*Is;
 	}
 	for( int i=0;i<num_blocks;i++)
 	{
@@ -251,7 +262,7 @@ void BlockLevelModel::ComputeTemperatureWithSuchPower(char* powerFileName)
 				Pnewq[i]=Pnewq[i]+Pnew[i][j];
 			}
 			leftTemp[i]=RI[i][i]*Pnewq[i];
-			leftTemp[i]=leftTemp[i]+45;
+			leftTemp[i]=leftTemp[i]+Templast[i]-273.15;   //+45
 			Temp[i]=leftTemp[i]+273.15;
 		}
 	    ComputeLeakagePower(Temp,1.0);
@@ -269,12 +280,17 @@ void BlockLevelModel::ComputeTemperatureWithSuchPower(char* powerFileName)
 		cout<<endl;
 		for (int i=0;i<num_blocks;i++)
 		{
-			cout<<"Temperature= "<<Temp[i]<<'\t'<<"Pleakage="<<power_leakage[i]<<'\t';
+			                                                                                                                               //保存每一次计算的温度；
+			cout<<"Temperature= "<<Temp[i]<<'\t'<<" Pleakage= "<<power_leakage[i]<<'\t';
 		}
 		cout<<endl;
 		cout<<count<<endl;
 	
 	  }
+	for (int i=0;i<num_blocks;i++)
+	{
+      Templast[i]=Temp[i];  
+	}
 	
 }
 double BlockLevelModel::MaxCloseJudge(double *newPLeakDy,double *lastPLeakDy)

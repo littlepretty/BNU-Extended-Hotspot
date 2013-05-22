@@ -12,6 +12,7 @@
 			double *power_leak_dy;
 			double *areas;
 			double *Temp;
+			double  *Templast;
 
 		public:
 			BlockLevelModel(int numBlocks);
