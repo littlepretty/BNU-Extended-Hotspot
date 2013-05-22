@@ -1,7 +1,6 @@
 #include "HotSpot.h"
 #include <time.h>
 #include <iostream>
-
 #include "BlockLevelModel.h"
 
 using namespace std;
@@ -12,13 +11,14 @@ int main()
 	/*	This is an example of how to use my encapsulated HotSpot code         */
 	/************************************************************************/
 	
+	double delta_time=0.001;
 	//HotSpot hs;
 	//HotSpot hs("ev6.flp", "ev6_steady.ptrace", "ev6.init", "ev6_block.steady", "ev6_block.ttrace", 0.001);
-	double delta_time=0.001;
-	HotSpot hs("ZT.flp", "RP4HS.ptrace", "ZT.init", "ZTHotSpot.tsteady", "ZThotspot.ttrace", delta_time);
+	HotSpot hs("ev6.flp", "ev6_steady.ptrace", "ev6.init", "ev6.steady", "ev6_grid.ttrace", delta_time);
 
 	//hs.hs_setup(false,false);
 	//hs.hs_setup(false,false,0.06,0.03,true,false);
+	// more specifically setup
 	bool temp_clip=false;
 	double heaksink_side=60e-3;
 	double spreader_side=30e-3;
@@ -38,7 +38,7 @@ int main()
 	hs.hs_dump_temp();
 
 	cout<<"Time eclipsed is "<<(double)eclipsedTime/CLOCKS_PER_SEC<<" seconds"<<endl;
-	
+
 	
 	/************************************************************************/
 	/*	Extract two core's parameters for ZT                                                               */
@@ -79,9 +79,9 @@ int main()
 	*/
 
 	/************************************************************************/
-	/*  Example and test of Block Level Model by ZT                                                             */
+	/*  Example of Block Level Model by ZT                                                                  */
 	/************************************************************************/
-	
+	/*
 	int blocks=7;
 	BlockLevelModel blm(blocks);
 
@@ -90,24 +90,10 @@ int main()
 	blm.ReadNormalTemperatureDataFromFile();
 	blm.ExtractBlockLevelParameterMatrix();
 
-	// Test with new power profile
-	for (int j=0;j<24;j++)
-	{
-		char Name[100] = {'\0'};
-		sprintf(Name,"ZTBlockLevel%d.tsteady",j+1);
-    for (int i=0;i<6;i++)
-	{
-	char szName[100] = {'\0'};
-	int c;
-	 c=j*6+i+1;
-	sprintf(szName,"BkPower_out%d.txt",c);
-     blm.ComputeTemperatureWithSuchPower(szName);
-	}
-	
-	blm.OutputComputeResultsToFile(Name,"ZTBlockLevel.psteady");
-	}
-	
-  return 0;	
+	// Test with a power profile
+	blm.ComputeTemperatureWithSuchPower("RandomPower.txt");
+	blm.OutputComputeResultsToFile();
+	*/
 
-	
+	return 0;
 }
