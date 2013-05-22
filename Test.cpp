@@ -10,7 +10,7 @@ int main()
 	/************************************************************************/
 	/*	This is an example of how to use my encapsulated HotSpot code         */
 	/************************************************************************/
-	/*
+	
 	double delta_time=0.001;
 	//HotSpot hs;
 	//HotSpot hs("ev6.flp", "ev6_steady.ptrace", "ev6.init", "ev6_block.steady", "ev6_block.ttrace", 0.001);
@@ -26,7 +26,7 @@ int main()
 	bool use_default=false;
 	bool leakage_used=true;
 	bool leakage_mode=false;
-	bool grid_model=true;
+	bool grid_model=false;
 	int grid_rows=128;
 	int grid_cols=128;
 
@@ -81,6 +81,7 @@ int main()
 	/************************************************************************/
 	/*  Example of Block Level Model by ZT                                                                  */
 	/************************************************************************/
+	/*
 	int blocks=7;
 	BlockLevelModel blm(blocks);
 
@@ -92,6 +93,7 @@ int main()
 	// Test with a power profile
 	blm.ComputeTemperatureWithSuchPower("RandomPower.txt");
 	blm.OutputComputeResultsToFile();
+	*/
 
 	return 0;
 }

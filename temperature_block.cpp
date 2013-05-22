@@ -294,6 +294,197 @@ void populate_R_model_block(block_model_t *model, flp_t *flp)
 	model->r_ready = TRUE;
 }
 
+double get_T_G_parameter()
+{
+	return 0.01;
+}
+
+void update_R_model_block(block_model_t *model, flp_t *flp, double *temp)
+{
+		/*	shortcuts	*/
+	double **b = model->b;
+	double *gx = model->gx, *gy = model->gy;
+	double *gx_int = model->gx_int, *gy_int = model->gy_int;
+	double *gx_sp = model->gx_sp, *gy_sp = model->gy_sp;
+	double *gx_hs = model->gx_hs, *gy_hs = model->gy_hs;
+	double *g_amb = model->g_amb;
+	double **len = model->len, **g = model->g, **lu = model->lu;
+	int **border = model->border;
+	int *p = model->p;
+	double t_chip = model->config.t_chip;
+	double r_convec = model->config.r_convec;
+	double s_sink = model->config.s_sink;
+	double t_sink = model->config.t_sink;
+	double s_spreader = model->config.s_spreader;
+	double t_spreader = model->config.t_spreader;
+	double t_interface = model->config.t_interface;
+	double k_chip = model->config.k_chip;
+	double k_sink = model->config.k_sink;
+	double k_spreader = model->config.k_spreader;
+	double k_interface = model->config.k_interface;
+	
+	int i, j, n = flp->n_units;
+	double gn_sp=0, gs_sp=0, ge_sp=0, gw_sp=0;
+	double gn_hs=0, gs_hs=0, ge_hs=0, gw_hs=0;
+	double r_amb;
+
+	double w_chip = get_total_width (flp);	/* x-axis	*/
+	double l_chip = get_total_height (flp);	/* y-axis	*/
+	
+	/* sanity check on floorplan sizes	*/
+	if (w_chip > s_sink || l_chip > s_sink || 
+		w_chip > s_spreader || l_chip > s_spreader) {
+		print_flp(flp);
+		print_flp_fig(flp);
+		fatal("inordinate floorplan size!\n");
+	}
+	if(model->flp != flp || model->n_units != flp->n_units ||
+	   model->n_nodes != NL * flp->n_units + EXTRA)
+	   fatal("mismatch between the floorplan and the thermal model\n");
+
+	for(i=0; i < n; i++){
+
+		gx[i] = gx[i] + temp[i]*get_T_G_parameter();
+		gy[i] = gx[i] + temp[i]*get_T_G_parameter();
+
+
+		/* at the interface layer	*/
+		gx_int[i] = gx_int[i] + temp[i]*get_T_G_parameter();
+		gy_int[i] = gy_int[i] + temp[i]*get_T_G_parameter();
+
+		/* at the spreader layer	*/
+		gx_sp[i] = gx_sp[i] + temp[i]*get_T_G_parameter();
+		gy_sp[i] = gy_sp[i] + temp[i]*get_T_G_parameter();
+
+		/* at the heatsink layer	*/
+		gx_hs[i] = gx_hs[i] + temp[i]*get_T_G_parameter();
+		gy_hs[i] = gy_hs[i] + temp[i]*get_T_G_parameter();
+	}
+
+	/* overall Rs between nodes */
+	for (i = 0; i < n; i++) {
+		double area = (flp->units[i].height * flp->units[i].width);
+		/* amongst functional units	in the various layers	*/
+		for (j = 0; j < n; j++) {
+			double part = 0, part_int = 0, part_sp = 0, part_hs = 0;
+			if (is_horiz_adj(flp, i, j)) {
+				part = gx[i] / flp->units[i].height;
+				part_int = gx_int[i] / flp->units[i].height;
+				part_sp = gx_sp[i] / flp->units[i].height;
+				part_hs = gx_hs[i] / flp->units[i].height;
+			}
+			else if (is_vert_adj(flp, i,j))  {
+				part = gy[i] / flp->units[i].width;
+				part_int = gy_int[i] / flp->units[i].width;
+				part_sp = gy_sp[i] / flp->units[i].width;
+				part_hs = gy_hs[i] / flp->units[i].width;
+			}
+			g[i][j] = part * len[i][j];
+			g[IFACE*n+i][IFACE*n+j] = part_int * len[i][j];
+			g[HSP*n+i][HSP*n+j] = part_sp * len[i][j];
+			g[HSINK*n+i][HSINK*n+j] = part_hs * len[i][j];
+		}
+		/* the 2.0 factor in the following equations is 
+		 * explained during the calculation of the B matrix
+		 */
+ 		/* vertical g's in the silicon layer	*/
+		g[i][IFACE*n+i]=g[IFACE*n+i][i]=2.0/getr(k_chip, t_chip, area);
+ 		/* vertical g's in the interface layer	*/
+		g[IFACE*n+i][HSP*n+i]=g[HSP*n+i][IFACE*n+i]=2.0/getr(k_interface, t_interface, area);
+		/* vertical g's in the spreader layer	*/
+		g[HSP*n+i][HSINK*n+i]=g[HSINK*n+i][HSP*n+i]=2.0/getr(k_spreader, t_spreader, area);
+		/* vertical g's in the heatsink core layer	*/
+		/* vertical R to ambient: divide r_convec proportional to area	*/
+		r_amb = r_convec * (s_sink * s_sink) / area;
+		g_amb[i] = 1.0 / (getr(k_sink, t_sink, area) + r_amb);
+
+		/* lateral g's from block center (spreader layer) to peripheral (n,s,e,w) spreader nodes	*/
+		g[HSP*n+i][NL*n+SP_N]=g[NL*n+SP_N][HSP*n+i]=2.0*border[i][2] /
+							  ((1.0/gy_sp[i])+model->pack.r_sp1_y*gn_sp/gy_sp[i]);
+		g[HSP*n+i][NL*n+SP_S]=g[NL*n+SP_S][HSP*n+i]=2.0*border[i][3] /
+							  ((1.0/gy_sp[i])+model->pack.r_sp1_y*gs_sp/gy_sp[i]);
+		g[HSP*n+i][NL*n+SP_E]=g[NL*n+SP_E][HSP*n+i]=2.0*border[i][1] /
+							  ((1.0/gx_sp[i])+model->pack.r_sp1_x*ge_sp/gx_sp[i]);
+		g[HSP*n+i][NL*n+SP_W]=g[NL*n+SP_W][HSP*n+i]=2.0*border[i][0] /
+							  ((1.0/gx_sp[i])+model->pack.r_sp1_x*gw_sp/gx_sp[i]);
+		
+		/* lateral g's from block center (heatsink layer) to peripheral (n,s,e,w) heatsink nodes	*/
+		g[HSINK*n+i][NL*n+SINK_C_N]=g[NL*n+SINK_C_N][HSINK*n+i]=2.0*border[i][2] /
+									((1.0/gy_hs[i])+model->pack.r_hs1_y*gn_hs/gy_hs[i]);
+		g[HSINK*n+i][NL*n+SINK_C_S]=g[NL*n+SINK_C_S][HSINK*n+i]=2.0*border[i][3] /
+									((1.0/gy_hs[i])+model->pack.r_hs1_y*gs_hs/gy_hs[i]);
+		g[HSINK*n+i][NL*n+SINK_C_E]=g[NL*n+SINK_C_E][HSINK*n+i]=2.0*border[i][1] /
+									((1.0/gx_hs[i])+model->pack.r_hs1_x*ge_hs/gx_hs[i]);
+		g[HSINK*n+i][NL*n+SINK_C_W]=g[NL*n+SINK_C_W][HSINK*n+i]=2.0*border[i][0] /
+									((1.0/gx_hs[i])+model->pack.r_hs1_x*gw_hs/gx_hs[i]);
+	}
+
+	/* g's from peripheral(n,s,e,w) nodes	*/
+	/* vertical g's between peripheral spreader nodes and center peripheral heatsink nodes */
+	g[NL*n+SP_N][NL*n+SINK_C_N]=g[NL*n+SINK_C_N][NL*n+SP_N]=2.0/model->pack.r_sp_per_y;
+	g[NL*n+SP_S][NL*n+SINK_C_S]=g[NL*n+SINK_C_S][NL*n+SP_S]=2.0/model->pack.r_sp_per_y;
+	g[NL*n+SP_E][NL*n+SINK_C_E]=g[NL*n+SINK_C_E][NL*n+SP_E]=2.0/model->pack.r_sp_per_x;
+	g[NL*n+SP_W][NL*n+SINK_C_W]=g[NL*n+SINK_C_W][NL*n+SP_W]=2.0/model->pack.r_sp_per_x;
+	/* lateral g's between peripheral outer sink nodes and center peripheral sink nodes	*/
+	g[NL*n+SINK_C_N][NL*n+SINK_N]=g[NL*n+SINK_N][NL*n+SINK_C_N]=2.0/(model->pack.r_hs + model->pack.r_hs2_y);
+	g[NL*n+SINK_C_S][NL*n+SINK_S]=g[NL*n+SINK_S][NL*n+SINK_C_S]=2.0/(model->pack.r_hs + model->pack.r_hs2_y);
+	g[NL*n+SINK_C_E][NL*n+SINK_E]=g[NL*n+SINK_E][NL*n+SINK_C_E]=2.0/(model->pack.r_hs + model->pack.r_hs2_x);
+	g[NL*n+SINK_C_W][NL*n+SINK_W]=g[NL*n+SINK_W][NL*n+SINK_C_W]=2.0/(model->pack.r_hs + model->pack.r_hs2_x);
+	/* vertical g's between inner peripheral sink nodes and ambient	*/
+	g_amb[n+SINK_C_N] = g_amb[n+SINK_C_S] = 1.0 / (model->pack.r_hs_c_per_y+model->pack.r_amb_c_per_y);
+	g_amb[n+SINK_C_E] = g_amb[n+SINK_C_W] = 1.0 / (model->pack.r_hs_c_per_x+model->pack.r_amb_c_per_x);
+	/* vertical g's between outer peripheral sink nodes and ambient	*/
+	g_amb[n+SINK_N] = g_amb[n+SINK_S] = g_amb[n+SINK_E] =
+					  g_amb[n+SINK_W] = 1.0 / (model->pack.r_hs_per+model->pack.r_amb_per);
+
+	/* calculate matrix B such that BT = POWER in steady state */
+	/* non-diagonal elements	*/
+	for (i = 0; i < NL*n+EXTRA; i++)
+		for (j = 0; j < i; j++)
+			if ((g[i][j] == 0.0) || (g[j][i] == 0.0))
+				b[i][j] = b[j][i] = 0.0;
+			else
+				/* here is why the 2.0 factor comes when calculating g[][]	*/
+				b[i][j] = b[j][i] = -1.0/((1.0/g[i][j])+(1.0/g[j][i]));
+	/* diagonal elements	*/			
+	for (i = 0; i < NL*n+EXTRA; i++) {
+		/* functional blocks in the heat sink layer	*/
+		if (i >= HSINK*n && i < NL*n) 
+			b[i][i] = g_amb[i%n];
+		/* heat sink peripheral nodes	*/
+		else if (i >= NL*n+SINK_C_W)
+			b[i][i] = g_amb[n+i-NL*n];
+		/* all other nodes that are not connected to the ambient	*/	
+		else
+			b[i][i] = 0.0;
+		/* sum up the conductances	*/	
+		for(j=0; j < NL*n+EXTRA; j++)
+			if (i != j)
+				b[i][i] -= b[i][j];
+	}
+
+	/* compute the LUP decomposition of B and store it too	*/
+	copy_dmatrix(lu, b, NL*n+EXTRA, NL*n+EXTRA);
+	/* 
+	 * B is a symmetric positive definite matrix. It is
+	 * symmetric because if a node A is connected to B, 
+	 * then B is also connected to A with the same R value.
+	 * It is positive definite because of the following
+	 * informal argument from Professor Lieven Vandenberghe's
+	 * lecture slides for the spring 2004-2005 EE 103 class 
+	 * at UCLA: http://www.ee.ucla.edu/~vandenbe/103/chol.pdf
+	 * x^T*B*x = voltage^T * (B*x) = voltage^T * current
+	 * = total power dissipated in the resistors > 0 
+	 * for x != 0. 
+	 */
+	lupdcmp(lu, NL*n+EXTRA, p, 1);
+
+	/* done	*/
+	model->flp = flp;
+	model->r_ready = TRUE;
+
+}
+
 /* creates 2 matrices: invA, C: dT + A^-1*BT = A^-1*Power, 
  * C = A^-1 * B. note that A is a diagonal matrix (no lateral
  * capacitances. all capacitances are to ground). also note that

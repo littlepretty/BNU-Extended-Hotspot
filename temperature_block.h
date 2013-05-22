@@ -68,6 +68,8 @@ void delete_block_model(block_model_t *model);
 
 /* initialization	*/
 void populate_R_model_block(block_model_t *model, flp_t *flp);
+double get_T_G_parameter();
+void update_R_model_block(block_model_t *model, flp_t *flp, double *temp);
 void populate_C_model_block(block_model_t *model, flp_t *flp);
 
 /* hotspot main interfaces - temperature.c	*/

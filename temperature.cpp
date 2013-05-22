@@ -677,13 +677,26 @@ RC_model_t *alloc_RC_model(thermal_config_t *config, flp_t *placeholder)
 	return model;	
 }
 
-/* populate the thermal restistance values */
+/* populate the thermal resistance values */
 void populate_R_model(RC_model_t *model, flp_t *flp)
 {
 	if (model->type == BLOCK_MODEL)
 		populate_R_model_block(model->block, flp);
 	else if (model->type == GRID_MODEL)	
 		populate_R_model_grid(model->grid, flp);
+	else fatal("unknown model type\n");	
+}
+
+/* update the thermal resistance values */
+void update_R_model(RC_model_t *model, flp_t *flp, double *temp)
+{
+	if (model->type == BLOCK_MODEL)
+		update_R_model_block(model->block, flp, temp);
+	else if (model->type == GRID_MODEL)
+	{
+		fprintf(stdout, "Thermal resistance update is not supported in grid model.\n");
+		//update_R_model_grid(model->grid, flp);
+	}
 	else fatal("unknown model type\n");	
 }
 
@@ -732,6 +745,7 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 					temp_old[i] = temp[i]; //copy temp before update
 				}
 				steady_state_temp_block(model->block, power_new, temp); // update temperature
+				update_R_model_block(model->block,model->block->flp,temp);
 				d_max = 0.0;
 				for(i=0; i < n; i++) {
 					d_temp[i] = temp[i] - temp_old[i]; //temperature increase due to leakage

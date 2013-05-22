@@ -1,0 +1,14 @@
+
+# Floorplan close to the Alpha EV6 processor
+# Line Format: <unit-name>\t<width>\t<height>\t<left-x>\t<bottom-y>
+# all dimensions are in meters
+# comment lines begin with a '#'
+# comments and empty lines are ignored
+
+Core1	0.002500	0.002500	0.000000	0.000000
+L1_right	0.007500	0.002500	0.002500	0.000000
+L1_up	0.002500	0.007500	0.000000	0.002500
+Share_L	0.015000	0.007500	0.002500	0.002500
+Core2	0.002500	0.002500	0.017500	0.000000	
+L2_left	0.007500	0.002500	0.010000	0.000000	
+L2_up	0.002500	0.007500	0.017500	0.002500

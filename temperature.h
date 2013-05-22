@@ -359,6 +359,7 @@ void delete_RC_model(RC_model_t *model);
 
 /* initialization	*/
 void populate_R_model(RC_model_t *model, flp_t *flp);
+void update_R_model(RC_model_t *model, flp_t *flp, double *temp);
 void populate_C_model(RC_model_t *model, flp_t *flp);
 
 /* hotspot main interfaces - temperature.c	*/
