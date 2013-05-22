@@ -26,6 +26,8 @@
 /* temperature-leakage loop constants */
 #define LEAKAGE_MAX_ITER 100 /* max thermal-leakage iteration number, if exceeded, report thermal runaway*/
 #define LEAK_TOL	0.01 /* thermal-leakage temperature convergence criterion */
+#define R_MAX_ITER 100
+#define R_TOL 0.0001
 
 /* number of extra nodes due to the model:
  * 4 spreader nodes, 4 heat sink nodes under

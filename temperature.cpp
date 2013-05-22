@@ -720,7 +720,10 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 //	else fatal("unknown model type\n");	
 
 	int leak_convg_true = 0;
+	int r_convg_true=0;
 	int leak_iter = 0;
+	int r_iter=0;
+
 	int n, base=0;
 	//int idx=0;
 	double blk_height, blk_width;
@@ -731,14 +734,18 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 	double *power_new = NULL;
 	double d_max=0.0;
 	
-	if (model->type == BLOCK_MODEL) {
+	if (model->type == BLOCK_MODEL) 
+	{
 		n = model->block->flp->n_units;
-		if (model->config->leakage_used) { // if considering leakage-temperature loop
+		if (model->config->leakage_used) 
+		{ // if considering leakage-temperature loop
 			d_temp = hotspot_vector(model);
 			temp_old = hotspot_vector(model);
 			power_new = hotspot_vector(model);
-			for (leak_iter=0;(!leak_convg_true)&&(leak_iter<=LEAKAGE_MAX_ITER);leak_iter++){
-				for(i=0; i < n; i++) {
+			for (leak_iter=0;(!leak_convg_true)&&(leak_iter<=LEAKAGE_MAX_ITER);leak_iter++)
+			{
+				for(i=0; i < n; i++) 
+				{
 					blk_height = model->block->flp->units[i].height;
 					blk_width = model->block->flp->units[i].width;
 					power_new[i] = power[i] + calc_leakage(model->config->leakage_mode,blk_height,blk_width,temp[i]);
@@ -747,16 +754,20 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 				steady_state_temp_block(model->block, power_new, temp); // update temperature
 				update_R_model_block(model->block,model->block->flp,temp);
 				d_max = 0.0;
-				for(i=0; i < n; i++) {
+				for(i=0; i < n; i++)
+				{
 					d_temp[i] = temp[i] - temp_old[i]; //temperature increase due to leakage
-					if (d_temp[i]>d_max) {
+					if (d_temp[i]>d_max)
+					{
 						d_max = d_temp[i];
 					}
 				}
-				if (d_max < LEAK_TOL) {// check convergence
+				if (d_max < LEAK_TOL)
+				{// check convergence
 					leak_convg_true = 1;
 				}
-				if (d_max > TEMP_HIGH && leak_iter > 1) {// check to make sure d_max is not "nan" (esp. in natural convection)
+				if (d_max > TEMP_HIGH && leak_iter > 1) 
+				{// check to make sure d_max is not "nan" (esp. in natural convection)
 					fatal("temperature is too high, possible thermal runaway. Double-check power inputs and package settings.\n");
 				}
 			}
@@ -766,18 +777,64 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 			/* if no convergence after max number of iterations, thermal runaway */
 			if (!leak_convg_true)
 				fatal("too many iterations before temperature-leakage convergence -- possible thermal runaway\n");
-		} else // if leakage-temperature loop is not considered
-			steady_state_temp_block(model->block, power, temp);
-	}
-	else if (model->type == GRID_MODEL)	{
-		if (model->config->leakage_used) { // if considering leakage-temperature loop
+		} 
+		else // if leakage-temperature loop is not considered
+		{	
 			d_temp = hotspot_vector(model);
 			temp_old = hotspot_vector(model);
 			power_new = hotspot_vector(model);
-			for (leak_iter=0;(!leak_convg_true)&&(leak_iter<=LEAKAGE_MAX_ITER);leak_iter++){
-				for(k=0, base=0; k < model->grid->n_layers; k++) {
+
+			for (r_iter=0;(!r_convg_true)&&(r_iter<=R_MAX_ITER);r_iter++)
+			{
+				for(i=0; i < n; i++) 
+				{
+					temp_old[i] = temp[i]; //copy temp before update
+					power_new[i] = power[i];
+				}
+				steady_state_temp_block(model->block, power_new, temp); // update temperature
+				update_R_model_block(model->block,model->block->flp,temp);
+				d_max = 0.0;
+				for(i=0; i < n; i++) 
+				{
+					d_temp[i] = temp[i] - temp_old[i]; //temperature increase due to leakage
+					if (d_temp[i]>d_max)
+					{
+						d_max = d_temp[i];
+					}
+				}
+				if (d_max < R_TOL)
+				{// check convergence
+					r_convg_true = 1;
+				}
+				if (d_max > TEMP_HIGH && r_iter > 1)
+				{// check to make sure d_max is not "nan" (esp. in natural convection)
+					fatal("temperature is too high, possible thermal runaway. Double-check power inputs and package settings.\n");
+				}
+			}
+
+			free(d_temp);
+			free(temp_old);
+			free(power_new);
+
+			/* if no convergence after max number of iterations, thermal runaway */
+			if (!r_convg_true)
+				fatal("too many iterations before temperature-leakage convergence -- possible thermal runaway\n");
+			}
+		}
+	else if (model->type == GRID_MODEL)	
+	{
+		if (model->config->leakage_used) 
+		{ // if considering leakage-temperature loop
+			d_temp = hotspot_vector(model);
+			temp_old = hotspot_vector(model);
+			power_new = hotspot_vector(model);
+			for (leak_iter=0;(!leak_convg_true)&&(leak_iter<=LEAKAGE_MAX_ITER);leak_iter++)
+			{
+				for(k=0, base=0; k < model->grid->n_layers; k++)
+				{
 					if(model->grid->layers[k].has_power)
-						for(j=0; j < model->grid->layers[k].flp->n_units; j++) {
+						for(j=0; j < model->grid->layers[k].flp->n_units; j++) 
+						{
 							blk_height = model->grid->layers[k].flp->units[j].height;
 							blk_width = model->grid->layers[k].flp->units[j].width;
 							power_new[base+j] = power[base+j] + calc_leakage(model->config->leakage_mode,blk_height,blk_width,temp[base+j]);
@@ -789,17 +846,20 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 				d_max = 0.0;
 				for(k=0, base=0; k < model->grid->n_layers; k++) {
 					if(model->grid->layers[k].has_power)
-						for(j=0; j < model->grid->layers[k].flp->n_units; j++) {
+						for(j=0; j < model->grid->layers[k].flp->n_units; j++)
+						{
 							d_temp[base+j] = temp[base+j] - temp_old[base+j]; //temperature increase due to leakage
 							if (d_temp[base+j]>d_max)
 								d_max = d_temp[base+j];
 						}
 					base += model->grid->layers[k].flp->n_units;	
 				}
-				if (d_max < LEAK_TOL) {// check convergence
+				if (d_max < LEAK_TOL) 
+				{// check convergence
 					leak_convg_true = 1;
 				}
-				if (d_max > TEMP_HIGH && leak_iter > 0) {// check to make sure d_max is not "nan" (esp. in natural convection)
+				if (d_max > TEMP_HIGH && leak_iter > 0) 
+				{// check to make sure d_max is not "nan" (esp. in natural convection)
 					fatal("temperature is too high, possible thermal runaway. Double-check power inputs and package settings.\n");
 				}
 			}
@@ -812,7 +872,8 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 		} else // if leakage-temperature loop is not considered
 			steady_state_temp_grid(model->grid, power, temp);
 	}
-	else fatal("unknown model type\n");	
+	else 
+		fatal("unknown model type\n");	
 }
 
 /* transient (instantaneous) temperature	*/

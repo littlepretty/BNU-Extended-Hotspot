@@ -24,7 +24,7 @@ int main()
 	double spreader_side=30e-3;
 
 	bool use_default=false;
-	bool leakage_used=true;
+	bool leakage_used=false;
 	bool leakage_mode=false;
 	bool grid_model=false;
 	int grid_rows=128;
