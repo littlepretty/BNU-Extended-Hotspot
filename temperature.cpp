@@ -104,7 +104,7 @@ thermal_config_t default_thermal_config(void)
 	return config;
 }
 
-thermal_config_t custom_thermal_config(double heatsink_side, double spreader_side, bool leakage_used, bool leakage_mode, bool grid_model, int grid_rows, int grid_cols)
+thermal_config_t custom_thermal_config(double heatsink_side, double spreader_side, bool r_update_used, bool leakage_used, bool leakage_mode, bool grid_model, int grid_rows, int grid_cols)
 {
 	thermal_config_t config;
 
@@ -165,6 +165,7 @@ thermal_config_t custom_thermal_config(double heatsink_side, double spreader_sid
 	
 	config.leakage_used = leakage_used;
 	config.leakage_mode = leakage_mode;
+	config.r_update_used=r_update_used;
 	
 	config.package_model_used = 0;
 	strcpy(config.package_config_file, NULLFILE);	
@@ -778,7 +779,7 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 			if (!leak_convg_true)
 				fatal("too many iterations before temperature-leakage convergence -- possible thermal runaway\n");
 		} 
-		else // if leakage-temperature loop is not considered
+		else if(model->config->r_update_used) // if r-temperature loop is considered
 		{	
 			d_temp = hotspot_vector(model);
 			temp_old = hotspot_vector(model);

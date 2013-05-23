@@ -65,9 +65,9 @@ thermal_config_t HotSpot::hs_default_thermal_config()
 	return default_thermal_config();
 }
 
-thermal_config_t HotSpot::hs_custom_thermal_config(double heatsink_side, double spreader_side, bool leakage_used, bool leakage_model, bool grid_model, int grid_rows, int grid_cols)
+thermal_config_t HotSpot::hs_custom_thermal_config(double heatsink_side, double spreader_side, bool r_update_used, bool leakage_used, bool leakage_model, bool grid_model, int grid_rows, int grid_cols)
 {
-	return custom_thermal_config(heatsink_side,spreader_side,leakage_used,leakage_model,grid_model,grid_rows,grid_cols);
+	return custom_thermal_config(heatsink_side,spreader_side, r_update_used, leakage_used,leakage_model,grid_model,grid_rows,grid_cols);
 }
 
 RC_model_t* HotSpot::hs_alloc_RC_model()
@@ -101,6 +101,7 @@ void HotSpot::hs_free_dvector(double* vec)
 void HotSpot::hs_setup(bool temp_clip, bool use_default,
 												double heaksink_side,
 												double spreader_side,
+												bool r_update_used,
 												bool leakage_used,
 												bool leakage_mode,
 												bool grid_model,
@@ -111,7 +112,7 @@ void HotSpot::hs_setup(bool temp_clip, bool use_default,
 	if (use_default)
 		config=hs_default_thermal_config();
 	else
-		config=hs_custom_thermal_config(heaksink_side,spreader_side,leakage_used,leakage_mode,grid_model,grid_rows,grid_cols);
+		config=hs_custom_thermal_config(heaksink_side,spreader_side, r_update_used, leakage_used,leakage_mode,grid_model,grid_rows,grid_cols);
 	
 	model=hs_alloc_RC_model();
 	temp = hotspot_vector(model);

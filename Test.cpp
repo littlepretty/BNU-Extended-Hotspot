@@ -24,13 +24,14 @@ int main()
 	double spreader_side=30e-3;
 
 	bool use_default=false;
+	bool r_update_used=true;
 	bool leakage_used=false;
 	bool leakage_mode=false;
 	bool grid_model=false;
 	int grid_rows=128;
 	int grid_cols=128;
 
-	hs.hs_setup(temp_clip,use_default,heaksink_side,spreader_side,leakage_used,leakage_mode,grid_model,grid_rows,grid_cols);
+	hs.hs_setup(temp_clip,use_default,heaksink_side,spreader_side,r_update_used, leakage_used,leakage_mode,grid_model,grid_rows,grid_cols);
 
 	clock_t beginTime=clock();
 	hs.hs_steady_state_temp();

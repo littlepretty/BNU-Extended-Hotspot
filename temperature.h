@@ -197,6 +197,7 @@ typedef struct thermal_config_t_st
 	/* temperature-leakage loop */
 	int leakage_used;
 	int leakage_mode;
+	int r_update_used;
 	
 	/* package model */
 	int package_model_used; /* flag to indicate whether package model is used */
@@ -219,7 +220,14 @@ typedef struct thermal_config_t_st
 /* defaults	*/
 thermal_config_t default_thermal_config(void);
 /* custom */
-thermal_config_t custom_thermal_config(double heatsink_side, double spreader_side, bool leakage_used, bool leakage_model, bool grid_model, int grid_rows, int grid_cols);
+thermal_config_t custom_thermal_config(double heatsink_side, 
+																					double spreader_side, 
+																					bool r_update_used,
+																					bool leakage_used, 
+																					bool leakage_model, 
+																					bool grid_model,
+																					int grid_rows, 
+																					int grid_cols);
 /* 
  * parse a table of name-value string pairs and add the configuration
  * parameters to 'config'

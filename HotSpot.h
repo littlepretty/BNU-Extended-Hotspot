@@ -27,6 +27,7 @@ public:
 									bool use_default=0,
 									double heaksink_side=60e-3,
 									double spreader_side=30e-3,
+									bool r_update_used=0,
 									bool leakage_used=0,
 									bool leakage_mode=0,
 									bool grid_model=false,
@@ -60,7 +61,7 @@ private:
 	 */
 	flp_t* hs_read_flp(bool read_connects);
 	thermal_config_t hs_default_thermal_config();
-	thermal_config_t hs_custom_thermal_config(double heatsink_side, double spreader_side, bool leakage_used, bool leakage_mode,bool grid_model, int grid_rows, int grid_cols);
+	thermal_config_t hs_custom_thermal_config(double heatsink_side, double spreader_side, bool r_update_used, bool leakage_used, bool leakage_mode,bool grid_model, int grid_rows, int grid_cols);
 	RC_model_t* hs_alloc_RC_model();
 
 	/*
