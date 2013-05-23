@@ -28,6 +28,8 @@
 #define LEAK_TOL	0.01 /* thermal-leakage temperature convergence criterion */
 #define R_MAX_ITER 100
 #define R_TOL 0.0001
+#define RESISTIVITY 0.0039
+
 
 /* number of extra nodes due to the model:
  * 4 spreader nodes, 4 heat sink nodes under
@@ -369,7 +371,7 @@ void delete_RC_model(RC_model_t *model);
 
 /* initialization	*/
 void populate_R_model(RC_model_t *model, flp_t *flp);
-void update_R_model(RC_model_t *model, flp_t *flp, double *temp);
+void update_R_model(RC_model_t *model, flp_t *flp, double *temp, double *temp_old);
 void populate_C_model(RC_model_t *model, flp_t *flp);
 
 /* hotspot main interfaces - temperature.c	*/

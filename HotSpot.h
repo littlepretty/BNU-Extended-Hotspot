@@ -40,11 +40,6 @@ public:
 	void hs_compute_temp();
 
 	/*
-	 * Update R/G when temperature changes
-	 */
-	void hs_update_R_model();
-
-	/*
 	 *	Steady temperature analysis
 	 */
 	void hs_steady_state_temp();

@@ -125,11 +125,6 @@ void HotSpot::hs_setup(bool temp_clip, bool use_default,
 	hs_populate_C_model();
 }
 
-void HotSpot::hs_update_R_model()
-{
-	update_R_model(model, flp, temp);
-}
-
 void HotSpot::hs_compute_temp()
 {
 	compute_temp(model, power, temp, delta_t);

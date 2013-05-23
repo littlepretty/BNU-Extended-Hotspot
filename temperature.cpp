@@ -689,10 +689,10 @@ void populate_R_model(RC_model_t *model, flp_t *flp)
 }
 
 /* update the thermal resistance values */
-void update_R_model(RC_model_t *model, flp_t *flp, double *temp)
+void update_R_model(RC_model_t *model, flp_t *flp, double *temp,double *temp_old)
 {
 	if (model->type == BLOCK_MODEL)
-		update_R_model_block(model->block, flp, temp);
+		update_R_model_block(model->block, flp, temp, temp_old);
 	else if (model->type == GRID_MODEL)
 	{
 		fprintf(stdout, "Thermal resistance update is not supported in grid model.\n");
@@ -753,7 +753,6 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 					temp_old[i] = temp[i]; //copy temp before update
 				}
 				steady_state_temp_block(model->block, power_new, temp); // update temperature
-				update_R_model_block(model->block,model->block->flp,temp);
 				d_max = 0.0;
 				for(i=0; i < n; i++)
 				{
@@ -793,7 +792,7 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 					power_new[i] = power[i];
 				}
 				steady_state_temp_block(model->block, power_new, temp); // update temperature
-				update_R_model_block(model->block,model->block->flp,temp);
+				update_R_model_block(model->block,model->block->flp,temp,temp_old);
 				d_max = 0.0;
 				for(i=0; i < n; i++) 
 				{
@@ -821,7 +820,10 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 			if (!r_convg_true)
 				fatal("too many iterations before temperature-leakage convergence -- possible thermal runaway\n");
 			}
+		else
+			steady_state_temp_block(model->block, power, temp);
 		}
+	
 	else if (model->type == GRID_MODEL)	
 	{
 		if (model->config->leakage_used) 

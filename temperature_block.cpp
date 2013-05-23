@@ -294,12 +294,12 @@ void populate_R_model_block(block_model_t *model, flp_t *flp)
 	model->r_ready = TRUE;
 }
 
-double get_T_G_parameter()
+double get_T_G_parameter(double temp)
 {
-	return 0.001;
+	return RESISTIVITY/(1+RESISTIVITY*temp);
 }
 
-void update_R_model_block(block_model_t *model, flp_t *flp, double *temp)
+void update_R_model_block(block_model_t *model, flp_t *flp, double *temp,double* temp_old)
 {
 		/*	shortcuts	*/
 	double **b = model->b;
@@ -344,21 +344,21 @@ void update_R_model_block(block_model_t *model, flp_t *flp, double *temp)
 
 	for(i=0; i < n; i++){
 
-		gx[i] = gx[i] + temp[i]*get_T_G_parameter();
-		gy[i] = gx[i] + temp[i]*get_T_G_parameter();
+		gx[i] = gx[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
+		gy[i] = gx[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
 
 
 		/* at the interface layer	*/
-		gx_int[i] = gx_int[i] + temp[i]*get_T_G_parameter();
-		gy_int[i] = gy_int[i] + temp[i]*get_T_G_parameter();
+		gx_int[i] = gx_int[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
+		gy_int[i] = gy_int[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
 
 		/* at the spreader layer	*/
-		gx_sp[i] = gx_sp[i] + temp[i]*get_T_G_parameter();
-		gy_sp[i] = gy_sp[i] + temp[i]*get_T_G_parameter();
+		gx_sp[i] = gx_sp[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
+		gy_sp[i] = gy_sp[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
 
 		/* at the heatsink layer	*/
-		gx_hs[i] = gx_hs[i] + temp[i]*get_T_G_parameter();
-		gy_hs[i] = gy_hs[i] + temp[i]*get_T_G_parameter();
+		gx_hs[i] = gx_hs[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
+		gy_hs[i] = gy_hs[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
 	}
 
 	/* overall Rs between nodes */
