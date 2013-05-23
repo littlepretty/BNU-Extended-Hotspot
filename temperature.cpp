@@ -1042,9 +1042,10 @@ double calc_leakage(int mode, double h, double w, double temp)
 	 * Be aware -- this model may not be accurate in some cases.
 	 * You may want to use your own temperature-dependent leakage model here.
 	 */ 
+	/*
 	double leak_alpha = 1.5e+4;
 	double leak_beta = 0.036;
-	double leak_Tbase = 383.15; /* 110C according to the above paper */
+	double leak_Tbase = 383.15; // 110C according to the above paper 
 
 	double leakage_power;
 	
@@ -1053,7 +1054,27 @@ double calc_leakage(int mode, double h, double w, double temp)
 		
 	leakage_power = leak_alpha*h*w*exp(leak_beta*(temp-leak_Tbase));
 	return leakage_power;	
+	*/
+
+	/* blocklevel  Zt changed  power_leakage */
+
+ 	double Is=29.56;
+	double A;
+	double B;
+	double alf=466.4029;
+	double beta=-1224.74083;
+	double gama=6.28153;
+	double kesi=6.9094;
+	double Vdd=1;
+	double power_leakage;
+	A=1.1432*pow(10.00,-9)*w*h*Is*8;
+	B=1.0126*pow(10.00,-11)*w*h*Is*8;
+	double xx=A*temp*temp*exp( (alf*Vdd+beta)/temp);
+	double yy=B*exp(gama*Vdd+kesi)*Vdd;
+	power_leakage=xx+yy;// 
+	return  power_leakage;	
 }
+
 
 /* destructor */
 void delete_RC_model(RC_model_t *model)
