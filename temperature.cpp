@@ -725,6 +725,9 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 	int leak_iter = 0;
 	int r_iter=0;
 
+	int r_leak_convg_true=0;
+	int r_leak_iter=0;
+
 	int n, base=0;
 	//int idx=0;
 	double blk_height, blk_width;
@@ -738,7 +741,48 @@ void steady_state_temp(RC_model_t *model, double *power, double *temp)
 	if (model->type == BLOCK_MODEL) 
 	{
 		n = model->block->flp->n_units;
-		if (model->config->leakage_used) 
+		if (model->config->leakage_used && model->config->r_update_used)
+		{
+			d_temp = hotspot_vector(model);
+			temp_old = hotspot_vector(model);
+			power_new = hotspot_vector(model);
+			for (r_leak_iter=0;(!r_leak_convg_true)&&(r_leak_iter<=R_LEAKAGE_MAX_ITER);r_leak_iter++)
+			{
+				for(i=0; i < n; i++) 
+				{
+					blk_height = model->block->flp->units[i].height;
+					blk_width = model->block->flp->units[i].width;
+					power_new[i] = power[i] + calc_leakage(model->config->leakage_mode,blk_height,blk_width,temp[i]);
+					temp_old[i] = temp[i]; //copy temp before update
+				}
+				steady_state_temp_block(model->block, power_new, temp); // update temperature
+				update_R_model_block(model->block,model->block->flp,temp,temp_old); // update model's thermal resistance
+				d_max = 0.0;
+				for(i=0; i < n; i++)
+				{
+					d_temp[i] = temp[i] - temp_old[i]; //temperature increase due to leakage
+					if (d_temp[i]>d_max)
+					{
+						d_max = d_temp[i];
+					}
+				}
+				if (d_max < R_LEAK_TOL)
+				{// check convergence
+					r_leak_convg_true = 1;
+				}
+				if (d_max > TEMP_HIGH && r_leak_iter > 1) 
+				{// check to make sure d_max is not "nan" (esp. in natural convection)
+					fatal("temperature is too high, possible thermal runaway. Double-check power inputs and package settings.\n");
+				}
+			}
+			free(d_temp);
+			free(temp_old);
+			free(power_new);
+			/* if no convergence after max number of iterations, thermal runaway */
+			if (!r_leak_convg_true)
+				fatal("too many iterations before temperature-leakage convergence -- possible thermal runaway\n");
+		}
+		else if (model->config->leakage_used) 
 		{ // if considering leakage-temperature loop
 			d_temp = hotspot_vector(model);
 			temp_old = hotspot_vector(model);
@@ -1056,8 +1100,7 @@ double calc_leakage(int mode, double h, double w, double temp)
 	return leakage_power;	
 	*/
 
-	/* blocklevel  Zt changed  power_leakage */
-
+	/* block level  ZT changed  power_leakage */
  	double Is=29.56;
 	double A;
 	double B;
@@ -1069,9 +1112,9 @@ double calc_leakage(int mode, double h, double w, double temp)
 	double power_leakage;
 	A=1.1432*pow(10.00,-9)*w*h*Is*8;
 	B=1.0126*pow(10.00,-11)*w*h*Is*8;
-	double xx=A*temp*temp*exp( (alf*Vdd+beta)/temp);
-	double yy=B*exp(gama*Vdd+kesi)*Vdd;
-	power_leakage=xx+yy;// 
+	double part1=A*temp*temp*exp( (alf*Vdd+beta)/temp);
+	double part2=B*exp(gama*Vdd+kesi)*Vdd;
+	power_leakage=part2+part1; 
 	return  power_leakage;	
 }
 

@@ -29,6 +29,8 @@
 #define R_MAX_ITER 100
 #define R_TOL 0.0001
 #define RESISTIVITY 0.0039
+#define R_LEAK_TOL 0.001
+#define R_LEAKAGE_MAX_ITER 100
 
 
 /* number of extra nodes due to the model:

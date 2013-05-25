@@ -104,7 +104,7 @@ int main()
 	HotSpot hs("ev6.flp", 
 		"ev6_steady.ptrace", 
 		"ev6.init", 
-		"ev6.steady_no_r_update", 
+		"ev6.steady_leak", 
 		"ev6_grid.ttrace", 
 		delta_time);
 
@@ -114,7 +114,7 @@ int main()
 
 	bool use_default=false;
 	bool r_update_used=false;
-	bool leakage_used=false;
+	bool leakage_used=true;
 	bool leakage_mode=false;
 	bool grid_model=false;
 	int grid_rows=128;
