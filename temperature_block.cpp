@@ -294,9 +294,9 @@ void populate_R_model_block(block_model_t *model, flp_t *flp)
 	model->r_ready = TRUE;
 }
 
-double update_conductivity(double temp, double temp_old, double k_old, double beta)
+double update_conductivity(double temp, double temp_amb, double k_amb, double beta)
 {
-	double k_new = k_old + beta*(temp-temp_old);
+	double k_new = k_amb + beta*(temp-temp_amb);
 	return k_new;
 }
 
@@ -345,19 +345,25 @@ void update_R_model_block(block_model_t *model, flp_t *flp, double *temp,double*
 	   fatal("mismatch between the floorplan and the thermal model\n");
 
 	/* gx's and gy's of blocks	*/
+	FILE *pf;
+	pf=fopen("k_trace","a");
+	fprintf(pf,"New Log Goes Here: \n");
+	fprintf(pf,"*************************************************************************************************************\n");
 	for (i = 0; i < n; i++) {
 
-		model->config.k_chip=update_conductivity(temp[i],temp_old[i], model->config.k_chip,SILICON_CONDUCTIVITY_BETA*CHIP_CONDUCTIVITY);
-		k_chip = model->config.k_chip;
+		k_chip=update_conductivity(temp[i],model->config.ambient, model->config.k_chip,SILICON_CONDUCTIVITY_BETA*CHIP_CONDUCTIVITY);
 
-		model->config.k_sink=update_conductivity(temp[i],temp_old[i], model->config.k_sink,SILICON_CONDUCTIVITY_BETA*HEATSINK_CONDUCTIVITY);
-		k_sink = model->config.k_sink;
+		k_interface=update_conductivity(temp[i],model->config.ambient, model->config.k_interface,SILICON_CONDUCTIVITY_BETA*INTERFACE_CONDUCTIVITY);
 
-		model->config.k_spreader=update_conductivity(temp[i],temp_old[i], model->config.k_spreader,CU_CONDUCTIVITY_BETA*SPREADER_CONDUCTIVITY);
-		k_spreader = model->config.k_spreader;
-
-		model->config.k_interface=update_conductivity(temp[i],temp_old[i], model->config.k_interface,CU_CONDUCTIVITY_BETA*INTERFAC_CONDUCTIVITY);
-		k_interface = model->config.k_interface;
+		k_sink=update_conductivity(temp[i],model->config.ambient, model->config.k_sink,CU_CONDUCTIVITY_BETA*HEATSINK_CONDUCTIVITY);
+		
+		k_spreader=update_conductivity(temp[i],model->config.ambient, model->config.k_spreader,CU_CONDUCTIVITY_BETA*SPREADER_CONDUCTIVITY);
+		
+		
+		
+		
+		fprintf(pf,"k_chip = %f\tk_sink = %f\tk_spreader = %f\tk_interface = %f\n",k_chip,k_sink,k_spreader,k_interface);
+		fprintf(pf,"temperature difference = %f\n\n\n",temp[i]-temp_old[i]);
 
 		/* at the silicon layer	*/
 		if (model->config.block_omit_lateral) {
@@ -380,6 +386,8 @@ void update_R_model_block(block_model_t *model, flp_t *flp, double *temp,double*
 		gx_hs[i] = 1.0/getr(k_sink, flp->units[i].width / 2.0, flp->units[i].height * t_sink);
 		gy_hs[i] = 1.0/getr(k_sink, flp->units[i].height / 2.0, flp->units[i].width * t_sink);
 	}
+	fprintf(pf,"End of Log\n\n\n");
+	fclose(pf);
 
 	/* shared lengths between blocks	*/
 	for (i = 0; i < n; i++) 

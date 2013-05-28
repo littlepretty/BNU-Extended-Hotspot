@@ -44,7 +44,7 @@ thermal_config_t default_thermal_config(void)
 
 	/* interface material specs	*/
 	config.t_interface = 20e-6;			/* interface material thickness in m */
-	config.k_interface = INTERFAC_CONDUCTIVITY;// 4.0; /* interface material thermal conductivity in W/(m-K) */
+	config.k_interface = INTERFACE_CONDUCTIVITY;// 4.0; /* interface material thermal conductivity in W/(m-K) */
 	config.p_interface = 4.0e6; /* interface material specific heat in J/(m^3-K) */
 	
 	/* secondary heat transfer path */
@@ -132,7 +132,7 @@ thermal_config_t custom_thermal_config(double heatsink_side, double spreader_sid
 
 	/* interface material specs	*/
 	config.t_interface = 20e-6;			/* interface material thickness in m */
-	config.k_interface = INTERFAC_CONDUCTIVITY;//4.0; /* interface material thermal conductivity in W/(m-K) */
+	config.k_interface = INTERFACE_CONDUCTIVITY;//4.0; /* interface material thermal conductivity in W/(m-K) */
 	config.p_interface = 4.0e6; /* interface material specific heat in J/(m^3-K) */
 	
 	/* secondary heat transfer path */
