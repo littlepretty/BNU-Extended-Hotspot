@@ -294,14 +294,15 @@ void populate_R_model_block(block_model_t *model, flp_t *flp)
 	model->r_ready = TRUE;
 }
 
-double get_T_G_parameter(double temp)
+double update_conductivity(double temp, double temp_old, double k_old, double beta)
 {
-	return RESISTIVITY/(1+RESISTIVITY*temp);
+	double k_new = k_old + beta*(temp-temp_old);
+	return k_new;
 }
 
 void update_R_model_block(block_model_t *model, flp_t *flp, double *temp,double* temp_old)
 {
-		/*	shortcuts	*/
+	/*	shortcuts	*/
 	double **b = model->b;
 	double *gx = model->gx, *gy = model->gy;
 	double *gx_int = model->gx_int, *gy_int = model->gy_int;
@@ -318,6 +319,7 @@ void update_R_model_block(block_model_t *model, flp_t *flp, double *temp,double*
 	double s_spreader = model->config.s_spreader;
 	double t_spreader = model->config.t_spreader;
 	double t_interface = model->config.t_interface;
+
 	double k_chip = model->config.k_chip;
 	double k_sink = model->config.k_sink;
 	double k_spreader = model->config.k_spreader;
@@ -342,24 +344,85 @@ void update_R_model_block(block_model_t *model, flp_t *flp, double *temp,double*
 	   model->n_nodes != NL * flp->n_units + EXTRA)
 	   fatal("mismatch between the floorplan and the thermal model\n");
 
-	for(i=0; i < n; i++){
+	/* gx's and gy's of blocks	*/
+	for (i = 0; i < n; i++) {
 
-		gx[i] = gx[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
-		gy[i] = gx[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
+		model->config.k_chip=update_conductivity(temp[i],temp_old[i], model->config.k_chip,SILICON_CONDUCTIVITY_BETA*CHIP_CONDUCTIVITY);
+		k_chip = model->config.k_chip;
 
+		model->config.k_sink=update_conductivity(temp[i],temp_old[i], model->config.k_sink,SILICON_CONDUCTIVITY_BETA*HEATSINK_CONDUCTIVITY);
+		k_sink = model->config.k_sink;
+
+		model->config.k_spreader=update_conductivity(temp[i],temp_old[i], model->config.k_spreader,CU_CONDUCTIVITY_BETA*SPREADER_CONDUCTIVITY);
+		k_spreader = model->config.k_spreader;
+
+		model->config.k_interface=update_conductivity(temp[i],temp_old[i], model->config.k_interface,CU_CONDUCTIVITY_BETA*INTERFAC_CONDUCTIVITY);
+		k_interface = model->config.k_interface;
+
+		/* at the silicon layer	*/
+		if (model->config.block_omit_lateral) {
+			gx[i] = gy[i] = 0;
+		}
+		else {
+			gx[i] = 1.0/getr(k_chip, flp->units[i].width / 2.0, flp->units[i].height * t_chip);
+			gy[i] = 1.0/getr(k_chip, flp->units[i].height / 2.0, flp->units[i].width * t_chip);
+		}
 
 		/* at the interface layer	*/
-		gx_int[i] = gx_int[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
-		gy_int[i] = gy_int[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
+		gx_int[i] = 1.0/getr(k_interface, flp->units[i].width / 2.0, flp->units[i].height * t_interface);
+		gy_int[i] = 1.0/getr(k_interface, flp->units[i].height / 2.0, flp->units[i].width * t_interface);
 
 		/* at the spreader layer	*/
-		gx_sp[i] = gx_sp[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
-		gy_sp[i] = gy_sp[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
+		gx_sp[i] = 1.0/getr(k_spreader, flp->units[i].width / 2.0, flp->units[i].height * t_spreader);
+		gy_sp[i] = 1.0/getr(k_spreader, flp->units[i].height / 2.0, flp->units[i].width * t_spreader);
 
 		/* at the heatsink layer	*/
-		gx_hs[i] = gx_hs[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
-		gy_hs[i] = gy_hs[i] + (temp_old[i]-temp[i])*get_T_G_parameter(temp[i]);
+		gx_hs[i] = 1.0/getr(k_sink, flp->units[i].width / 2.0, flp->units[i].height * t_sink);
+		gy_hs[i] = 1.0/getr(k_sink, flp->units[i].height / 2.0, flp->units[i].width * t_sink);
 	}
+
+	/* shared lengths between blocks	*/
+	for (i = 0; i < n; i++) 
+		for (j = i; j < n; j++) 
+			len[i][j] = len[j][i] = get_shared_len(flp, i, j);
+
+	/* package R's	*/
+	populate_package_R(&model->pack, &model->config, w_chip, l_chip);
+
+	/* short the R's from block centers to a particular chip edge	*/
+	for (i = 0; i < n; i++) {
+		if (eq(flp->units[i].bottomy + flp->units[i].height, l_chip)) {
+			gn_sp += gy_sp[i];
+			gn_hs += gy_hs[i];
+			border[i][2] = 1;	/* block is on northern border 	*/
+		} else
+			border[i][2] = 0;
+
+		if (eq(flp->units[i].bottomy, 0)) {
+			gs_sp += gy_sp[i];
+			gs_hs += gy_hs[i];
+			border[i][3] = 1;	/* block is on southern border	*/
+		} else
+			border[i][3] = 0;
+
+		if (eq(flp->units[i].leftx + flp->units[i].width, w_chip)) {
+			ge_sp += gx_sp[i];
+			ge_hs += gx_hs[i];
+			border[i][1] = 1;	/* block is on eastern border	*/
+		} else 
+			border[i][1] = 0;
+
+		if (eq(flp->units[i].leftx, 0)) {
+			gw_sp += gx_sp[i];
+			gw_hs += gx_hs[i];
+			border[i][0] = 1;	/* block is on western border	*/
+		} else
+			border[i][0] = 0;
+	}
+
+	/* initialize g	*/
+	zero_dmatrix(g, NL*n+EXTRA, NL*n+EXTRA);
+	zero_dvector(g_amb, n+EXTRA);
 
 	/* overall Rs between nodes */
 	for (i = 0; i < n; i++) {
@@ -482,7 +545,6 @@ void update_R_model_block(block_model_t *model, flp_t *flp, double *temp,double*
 	/* done	*/
 	model->flp = flp;
 	model->r_ready = TRUE;
-
 }
 
 /* creates 2 matrices: invA, C: dT + A^-1*BT = A^-1*Power, 

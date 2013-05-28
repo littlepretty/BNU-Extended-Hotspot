@@ -68,7 +68,7 @@ void delete_block_model(block_model_t *model);
 
 /* initialization	*/
 void populate_R_model_block(block_model_t *model, flp_t *flp);
-double get_T_G_parameter(double temp);
+double update_conductivity(double temp, double temp_old, double k_old, double conductivity);
 void update_R_model_block(block_model_t *model, flp_t *flp, double *temp, double *temp_old);
 void populate_C_model_block(block_model_t *model, flp_t *flp);
 

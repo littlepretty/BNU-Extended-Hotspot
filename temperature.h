@@ -28,7 +28,15 @@
 #define LEAK_TOL	0.01 /* thermal-leakage temperature convergence criterion */
 #define R_MAX_ITER 100
 #define R_TOL 0.0001
-#define RESISTIVITY 0.0039
+
+#define SILICON_CONDUCTIVITY_BETA -0.0031
+#define CU_CONDUCTIVITY_BETA -0.000052
+
+#define CHIP_CONDUCTIVITY 130
+#define HEATSINK_CONDUCTIVITY 385
+#define SPREADER_CONDUCTIVITY 385
+#define INTERFAC_CONDUCTIVITY 100
+
 #define R_LEAK_TOL 0.001
 #define R_LEAKAGE_MAX_ITER 100
 

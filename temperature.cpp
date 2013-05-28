@@ -22,7 +22,7 @@ thermal_config_t default_thermal_config(void)
 
 	/* chip specs	*/
 	config.t_chip = 0.15e-3;			/* chip thickness in meters	*/
-	config.k_chip = 100.0; /* chip thermal conductivity in W/(m-K) */
+	config.k_chip = CHIP_CONDUCTIVITY; /* chip thermal conductivity in W/(m-K) */
 	config.p_chip = 1.75e6; /* chip specific heat in J/(m^3-K) */
 	/* temperature threshold for DTM (Kelvin)*/
 	config.thermal_threshold = 81.8 + 273.15;
@@ -32,19 +32,19 @@ thermal_config_t default_thermal_config(void)
 	config.r_convec = 0.1;				/* convection resistance in K/W	*/
 	config.s_sink = 60e-3;				/* heatsink side in m	*/
 	config.t_sink = 6.9e-3; 			/* heatsink thickness  in m	*/
-	config.k_sink = 400.0; /* heatsink thermal conductivity in W/(m-K) */
+	config.k_sink = HEATSINK_CONDUCTIVITY;//400.0; /* heatsink thermal conductivity in W/(m-K) */
 	config.p_sink = 3.55e6; /* heatsink specific heat in J/(m^3-K) */
 	
 
 	/* heat spreader specs	*/
 	config.s_spreader = 30e-3;			/* spreader side in m	*/
 	config.t_spreader = 1e-3;			/* spreader thickness in m	*/
-	config.k_spreader = 400.0; /* heat spreader thermal conductivity in W/(m-K) */
+	config.k_spreader = SPREADER_CONDUCTIVITY; //400.0; /* heat spreader thermal conductivity in W/(m-K) */
 	config.p_spreader = 3.55e6; /* heat spreader specific heat in J/(m^3-K) */
 
 	/* interface material specs	*/
 	config.t_interface = 20e-6;			/* interface material thickness in m */
-	config.k_interface = 4.0; /* interface material thermal conductivity in W/(m-K) */
+	config.k_interface = INTERFAC_CONDUCTIVITY;// 4.0; /* interface material thermal conductivity in W/(m-K) */
 	config.p_interface = 4.0e6; /* interface material specific heat in J/(m^3-K) */
 	
 	/* secondary heat transfer path */
@@ -110,7 +110,7 @@ thermal_config_t custom_thermal_config(double heatsink_side, double spreader_sid
 
 	/* chip specs	*/
 	config.t_chip = 0.15e-3;			/* chip thickness in meters	*/
-	config.k_chip = 100.0; /* chip thermal conductivity in W/(m-K) */
+	config.k_chip = CHIP_CONDUCTIVITY; //100/* chip thermal conductivity in W/(m-K) */
 	config.p_chip = 1.75e6; /* chip specific heat in J/(m^3-K) */
 	/* temperature threshold for DTM (Kelvin)*/
 	config.thermal_threshold = 81.8 + 273.15;
@@ -120,19 +120,19 @@ thermal_config_t custom_thermal_config(double heatsink_side, double spreader_sid
 	config.r_convec = 0.1;				/* convection resistance in K/W	*/
 	config.s_sink = heatsink_side;				/* heatsink side in m	*/
 	config.t_sink = 6.9e-3; 			/* heatsink thickness  in m	*/
-	config.k_sink = 400.0; /* heatsink thermal conductivity in W/(m-K) */
+	config.k_sink = HEATSINK_CONDUCTIVITY;//400.0; /* heatsink thermal conductivity in W/(m-K) */
 	config.p_sink = 3.55e6; /* heatsink specific heat in J/(m^3-K) */
 	
 
 	/* heat spreader specs	*/
 	config.s_spreader = spreader_side;			/* spreader side in m	*/
 	config.t_spreader = 1e-3;			/* spreader thickness in m	*/
-	config.k_spreader = 400.0; /* heat spreader thermal conductivity in W/(m-K) */
+	config.k_spreader = SPREADER_CONDUCTIVITY;//400.0; /* heat spreader thermal conductivity in W/(m-K) */
 	config.p_spreader = 3.55e6; /* heat spreader specific heat in J/(m^3-K) */
 
 	/* interface material specs	*/
 	config.t_interface = 20e-6;			/* interface material thickness in m */
-	config.k_interface = 4.0; /* interface material thermal conductivity in W/(m-K) */
+	config.k_interface = INTERFAC_CONDUCTIVITY;//4.0; /* interface material thermal conductivity in W/(m-K) */
 	config.p_interface = 4.0e6; /* interface material specific heat in J/(m^3-K) */
 	
 	/* secondary heat transfer path */
