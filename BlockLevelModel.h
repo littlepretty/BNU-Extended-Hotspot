@@ -3,7 +3,6 @@
 	class BlockLevelModel
 	{
 		private:
-			int num_blocks;
 			double ** normal_temperature_data;
 			double base_temperature;
 			double *power_data;
@@ -15,6 +14,8 @@
 			double  *Templast;
 
 		public:
+			void setRI(double** R);
+			int num_blocks;
 			BlockLevelModel(int numBlocks);
 			void ReadNormalTemperatureDataFromFile();
 			void ReadPowerDataFromFile(char* powerFileName="InputPower.txt");

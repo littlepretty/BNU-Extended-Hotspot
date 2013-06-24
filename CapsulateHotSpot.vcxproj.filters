@@ -48,6 +48,15 @@
     <ClInclude Include="BlockLevelModel.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="PreExtract.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FlpInfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SelfMadeTimer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HotSpot.cpp">
@@ -68,9 +77,6 @@
     <ClCompile Include="util.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Test.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="npe.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -87,6 +93,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BlockLevelModel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FlpInfo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PreExtract.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TestDemo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SelfMadeTimer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

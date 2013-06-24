@@ -76,9 +76,12 @@
   <ItemGroup>
     <ClInclude Include="BlockLevelModel.h" />
     <ClInclude Include="flp.h" />
+    <ClInclude Include="FlpInfo.h" />
     <ClInclude Include="HotSpot.h" />
     <ClInclude Include="npe.h" />
     <ClInclude Include="package.h" />
+    <ClInclude Include="PreExtract.hpp" />
+    <ClInclude Include="SelfMadeTimer.h" />
     <ClInclude Include="shape.h" />
     <ClInclude Include="temperature.h" />
     <ClInclude Include="temperature_block.h" />
@@ -89,15 +92,18 @@
   <ItemGroup>
     <ClCompile Include="BlockLevelModel.cpp" />
     <ClCompile Include="flp.cpp" />
+    <ClCompile Include="FlpInfo.cpp" />
     <ClCompile Include="HotSpot.cpp" />
     <ClCompile Include="npe.cpp" />
     <ClCompile Include="package.cpp" />
+    <ClCompile Include="PreExtract.cpp" />
     <ClCompile Include="RCutil.cpp" />
+    <ClCompile Include="SelfMadeTimer.cpp" />
     <ClCompile Include="shape.cpp" />
     <ClCompile Include="temperature.cpp" />
     <ClCompile Include="temperature_block.cpp" />
     <ClCompile Include="temperature_grid.cpp" />
-    <ClCompile Include="Test.cpp" />
+    <ClCompile Include="TestDemo.cpp" />
     <ClCompile Include="util.cpp" />
     <ClCompile Include="wire.cpp" />
   </ItemGroup>

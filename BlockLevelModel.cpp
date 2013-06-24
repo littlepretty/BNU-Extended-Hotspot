@@ -38,12 +38,22 @@ BlockLevelModel::~BlockLevelModel()
 	}
 	delete [] normal_temperature_data;
 	delete [] RI;
-	delete [] power_leakage;
+	
 	delete [] areas;
 	delete [] Templast;
 
 }
 
+void BlockLevelModel::setRI(double** R)
+{
+	for (int i=0;i<num_blocks;i++)
+	{
+		for (int j=0;j<num_blocks;j++)
+		{
+			RI[i][j]=R[i][j];
+		}
+	}
+}
 	
 
 void BlockLevelModel::ReadNormalTemperatureDataFromFile()
@@ -275,7 +285,8 @@ void BlockLevelModel::ComputeTemperatureWithSuchPower(char* powerFileName)
 		{
 		
 		 power_leak_dy[i]=power_data[i]+power_leakage[i];
-		 cout<<"lastPleage= "<<lastPLeakDy[i]<<"\t new= "<<power_leak_dy[i]<<"\tpowerdata="<<power_data[i]<<"\tPleakage"<<power_leakage[i]<<endl;
+		 cout<<"lastPleage= "<<lastPLeakDy[i]<<"\t new= "<<power_leak_dy[i]<<
+			 "\tpowerdata="<<power_data[i]<<"\tPleakage"<<power_leakage[i]<<endl;
 		}
 		cout<<endl;
 		for (int i=0;i<num_blocks;i++)
@@ -291,7 +302,7 @@ void BlockLevelModel::ComputeTemperatureWithSuchPower(char* powerFileName)
 	{
       Templast[i]=Temp[i];  
 	}
-	
+	delete [] power_leakage;
 }
 double BlockLevelModel::MaxCloseJudge(double *newPLeakDy,double *lastPLeakDy)
 {   
