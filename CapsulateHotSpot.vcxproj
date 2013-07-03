@@ -77,7 +77,10 @@
     <ClInclude Include="BlockLevelModel.h" />
     <ClInclude Include="flp.h" />
     <ClInclude Include="FlpInfo.h" />
+    <ClInclude Include="flp_desc.h" />
+    <ClInclude Include="hotfloorplan.h" />
     <ClInclude Include="HotSpot.h" />
+    <ClInclude Include="HotSpotFloorplanner.hpp" />
     <ClInclude Include="npe.h" />
     <ClInclude Include="package.h" />
     <ClInclude Include="PreExtract.hpp" />
@@ -93,7 +96,10 @@
     <ClCompile Include="BlockLevelModel.cpp" />
     <ClCompile Include="flp.cpp" />
     <ClCompile Include="FlpInfo.cpp" />
+    <ClCompile Include="flp_desc.cpp" />
+    <ClCompile Include="hotfloorplan.cpp" />
     <ClCompile Include="HotSpot.cpp" />
+    <ClCompile Include="HotSpotFloorplanner.cpp" />
     <ClCompile Include="npe.cpp" />
     <ClCompile Include="package.cpp" />
     <ClCompile Include="PreExtract.cpp" />

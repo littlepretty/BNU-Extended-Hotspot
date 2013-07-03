@@ -6,6 +6,10 @@
 #include "PreExtract.hpp"
 #include "FlpInfo.h"
 #include "SelfMadeTimer.h"
+#include "hotfloorplan.h"
+#include "flp_desc.h"
+#include "HotSpotFloorplanner.hpp"
+
 
 using namespace std;
 
@@ -98,8 +102,6 @@ void HotSpotConsiderConductivityDemo()
 	NoConductivityUpdateDemo();
 	ConductivityUpdateDemo();
 }
-
-
 
 void PreExtractDemo()
 {
@@ -266,6 +268,129 @@ void SelfMadeTimerDemo()
 
 }
 
+void OriginalHotFloorplanDemo()
+{
+	flp_desc_t *flp_desc;
+	flp_t *flp;
+	RC_model_t *model;
+	double *power;
+	thermal_config_t thermal_config;
+	flp_config_t flp_config;
+	global_config_t global_config;
+	str_pair table[MAX_ENTRIES];
+	int size, compacted;
+
+	//if (!(argc >= 7 && argc % 2)) {
+	//	usage(argc, argv);
+	//	return 1;
+	//}
+	int argc=9;
+	char** argv=new char*[9];
+	argv[0]="hotfloorplan",argv[1]="-f",argv[2]="ev6.desc",argv[3]="-p", argv[4]="avg.p",
+		argv[5]="-o", argv[6]="demo.flp",argv[7]="-c",argv[8]= "hotspot.config";
+	
+	size = parse_cmdline(table, MAX_ENTRIES, argc, argv);
+	global_config_from_strs(&global_config, table, size);
+
+	/* read configuration file	*/
+	if (strcmp(global_config.config, NULLFILE))
+		size += read_str_pairs(&table[size], MAX_ENTRIES, global_config.config);
+
+	/* 
+	 * in the str_pair 'table', earlier entries override later ones.
+	 * so, command line options have priority over config file 
+	 */
+	size = str_pairs_remove_duplicates(table, size);
+
+	/* get defaults */
+	thermal_config = default_thermal_config();
+	flp_config = default_flp_config();
+	/* modify according to command line / config file	*/
+	thermal_config_add_from_strs(&thermal_config, table, size);
+	flp_config_add_from_strs(&flp_config, table, size);
+
+	/* dump configuration if specified	*/
+	if (strcmp(global_config.dump_config, NULLFILE)) {
+		size = global_config_to_strs(&global_config, table, MAX_ENTRIES);
+		size += thermal_config_to_strs(&thermal_config, &table[size], MAX_ENTRIES-size);
+		size += flp_config_to_strs(&flp_config, &table[size], MAX_ENTRIES-size);
+		/* prefix the name of the variable with a '-'	*/
+		dump_str_pairs(table, size, global_config.dump_config, "-");
+	}
+
+	/* If the grid model is used, things could be really slow!
+	 * Also make sure it is not in the 3-d chip mode (specified 
+	 * with the layer configuration file)
+	 */
+	if (!strcmp(thermal_config.model_type, GRID_MODEL_STR)) {
+		if (strcmp(thermal_config.grid_layer_file, NULLFILE))
+			fatal("lcf file specified with the grid model. 3-d chips not supported\n");
+		warning("grid model is used. HotFloorplan could be REALLY slow\n");
+	}
+
+	/* description of the functional blocks to be floorplanned	*/
+	flp_desc = read_flp_desc(global_config.flp_desc, &flp_config);
+	/* 
+	 * just an empty frame with blocks' names.
+	 * block positions not known yet.
+	 */
+	flp = flp_placeholder(flp_desc);
+	/* temperature model	*/
+	model = alloc_RC_model(&thermal_config, flp);
+	/* input power vector	*/
+	power = hotspot_vector(model);
+	read_power(model, power, global_config.power_in);
+
+	/* main floorplanning routine	*/
+	compacted = floorplan(flp, flp_desc, model, power);
+	/* 
+	 * print the finally selected floorplan in a format that can 
+	 * be understood by tofig.pl (which converts it to a FIG file)
+	 */
+	print_flp_fig(flp);
+	/* print the floorplan statistics	*/
+	if (flp_config.wrap_l2 &&
+		!strcasecmp(flp_desc->units[flp_desc->n_units-1].name, flp_config.l2_label))
+		print_flp_stats(flp, model, flp_config.l2_label, 
+						global_config.power_in, global_config.flp_desc);
+	
+	/* print the wire delays between blocks	*/
+	print_wire_delays(flp, thermal_config.base_proc_freq);
+
+	/* also output the floorplan to a file readable by hotspot	*/
+	dump_flp(flp, global_config.flp_out, FALSE);
+
+	free_flp_desc(flp_desc);
+	delete_RC_model(model);
+	free_dvector(power);
+
+	/* while deallocating, free the compacted blocks too	*/
+	free_flp(flp, compacted);
+}
+
+void HotSpotFloorplannerDemo()
+{
+	char* flp_desc_file="ev6.desc";
+	char* power_file="avg.p";
+	char* output_file="demo.flp";
+	char* config_file="hotspot.config";
+
+	char* fig_file="ev6_flp.fig";
+	char* stats_file="ev6.stats";
+	char* wire_delay_file="ev6.wire_delay";
+
+	HotSpotFloorplanner hsf(flp_desc_file,power_file,output_file,config_file);
+	hsf.hsf_print_usage();
+
+	hsf.insertConfigParameter("s_spreader","0.04");
+	hsf.insertConfigParameter("s_sink","0.08");
+	
+	int compacted=hsf.hsf_floorplan();
+	//hsf.hsf_print_flp_fig();
+	//hsf.hsf_print_flp_fig(fig_file);
+	hsf.hsf_print_auxilary_results(fig_file,stats_file,wire_delay_file);
+}
+
 int main()
 {
 	/***************************************/
@@ -276,7 +401,10 @@ int main()
 	//BlockLevelModelDemo();
 	//HotSpotConsiderConductivityDemo();
 	//SelfMadeTimerDemo();
-	PreExtractDemo();
+	//PreExtractDemo();
+	//OriginalHotFloorplanDemo();
+	HotSpotFloorplannerDemo();
+
 
 	return 0;
 }

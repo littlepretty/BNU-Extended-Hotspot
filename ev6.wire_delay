@@ -1,0 +1,17 @@
+printing wire delay between blocks for global and intermediate metal layers:
+(in 3.0 GHz cycles)
+name1	name2	global	intermediate
+Icache	Bpred	0.527	0.895
+Icache	L2	1.048	1.780
+Dcache	LdStQ	0.763	1.295
+Dcache	L2	2.169	3.684
+Bpred	ITB	0.470	0.798
+DTB	LdStQ	0.328	0.557
+FPAdd	FPQ	0.467	0.794
+FPReg	FPQ	0.211	0.358
+FPMul	FPQ	0.791	1.344
+FPMap	FPQ	0.284	0.482
+IntMap	IntQ	1.007	1.710
+IntMap	LdStQ	0.377	0.640
+IntQ	IntReg	0.219	0.371
+IntQ	IntExec	0.455	0.773

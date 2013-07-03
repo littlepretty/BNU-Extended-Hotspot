@@ -1,0 +1,13 @@
+printing summary statistics about the floorplan
+total area:	0.000253119
+total width:	0.0159097
+total height:	0.0159097
+core area:	3.88016e-005
+occupied area:	3.88016e-005
+area utilization:	100.000
+core width:	0.00415603
+core height:	0.00933622
+core aspect ratio:	2.246
+wire length metric:	0.075
+peak temperature:	332.716
+avg temperature:	326.612

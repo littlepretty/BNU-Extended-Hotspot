@@ -57,6 +57,15 @@
     <ClInclude Include="SelfMadeTimer.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="hotfloorplan.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="flp_desc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="HotSpotFloorplanner.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HotSpot.cpp">
@@ -105,6 +114,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="SelfMadeTimer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="hotfloorplan.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="flp_desc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="HotSpotFloorplanner.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
