@@ -406,5 +406,7 @@ int main()
 	HotSpotFloorplannerDemo();
 
 
+	std::cout<<"End of Simulation."<<std::endl;
+
 	return 0;
 }
